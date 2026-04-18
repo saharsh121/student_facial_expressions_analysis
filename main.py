@@ -7,9 +7,8 @@ import av
 import time
 import pandas as pd
 
-# ======================
+
 # CONFIG
-# ======================
 EMOTIONS = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 IMG_SIZE = 100
 
@@ -23,9 +22,8 @@ CONFUSION_MAP = {
     "Surprise": 0.3
 }
 
-# ======================
+
 # SESSION STORAGE
-# ======================
 if "confusion_history" not in st.session_state:
     st.session_state.confusion_history = []
 
@@ -35,25 +33,21 @@ if "time_history" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
 
-# ======================
+
 # LOAD MODEL
-# ======================
 @st.cache_resource
 def load_model():
     return tf.keras.models.load_model("best_model.h5", compile=False)
 
 model = load_model()
 
-# ======================
+
 # FACE DETECTOR
-# ======================
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
 
-# ======================
 # VIDEO PROCESSOR
-# ======================
 class EmotionProcessor(VideoProcessorBase):
     def __init__(self):
         self.confusion_list = []
@@ -106,7 +100,7 @@ class EmotionProcessor(VideoProcessorBase):
 
                 self.last_faces_data.append((x, y, w, h, emotion, conf_score))
 
-            # ✅ Compute average confusion
+            #Compute average confusion
             if len(self.confusion_list) > 0:
                 self.last_avg_conf = sum(self.confusion_list) / len(self.confusion_list)
             else:
@@ -148,9 +142,8 @@ class EmotionProcessor(VideoProcessorBase):
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# ======================
+
 # UI
-# ======================
 st.set_page_config(page_title="Smart Classroom AI", page_icon="🎭")
 st.title("🎭 Smart Classroom - Emotion Detection")
 
@@ -160,9 +153,8 @@ webrtc_ctx = webrtc_streamer(
     media_stream_constraints={"video": True, "audio": False},
     async_processing=True
 )
-# ======================
-# ANALYTICS (AUTO + PERSIST)
-# ======================
+
+# ANALYTICS 
 st.subheader("📊 Classroom Analytics (Live)")
 
 metric_placeholder = st.empty()
@@ -176,9 +168,8 @@ if st.button("🗑️ Clear Graph"):
     st.session_state.start_time = time.time()
     st.success("Graph cleared!")
 
-# ======================
+
 # LIVE PROCESSING
-# ======================
 if webrtc_ctx.video_processor and webrtc_ctx.state.playing:
 
     while webrtc_ctx.state.playing:
@@ -223,12 +214,10 @@ if webrtc_ctx.video_processor and webrtc_ctx.state.playing:
 
         time.sleep(1)
 
-# ======================
 # WHEN VIDEO STOPS → SHOW LAST GRAPH
-# ======================
 elif len(st.session_state.time_history) > 1:
 
-    st.info("📌 Session stopped — showing recorded analytics")
+    st.info("Session stopped — showing recorded analytics")
 
     df = pd.DataFrame({
         "Time (s)": st.session_state.time_history,
